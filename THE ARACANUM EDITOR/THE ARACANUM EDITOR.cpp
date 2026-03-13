@@ -165,6 +165,7 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     UNREFERENCED_PARAMETER(lParam);
     switch (message)
     {
+
     case WM_INITDIALOG:
         return (INT_PTR)TRUE;
 

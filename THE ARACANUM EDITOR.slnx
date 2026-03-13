@@ -3,5 +3,5 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="THE ARACANUM EDITOR/THE ARACANUM EDITOR.vcxproj" />
+  <Project Path="THE ARACANUM EDITOR/THE ARACANUM EDITOR.vcxproj" Id="ddbe4566-ab97-4c85-9d5d-b8c6552ff8ed" />
 </Solution>
