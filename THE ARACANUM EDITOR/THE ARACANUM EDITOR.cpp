@@ -51,6 +51,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         else {
 
+            Pages* p = Documents->getPage(Documents->getCurrentPage());
+            Columns* c = p->getColumn(p->getCurrentColumns());
+            lines* l = c->getLine(c->getCurrentLine());
+
+            if (wParam == VK_RETURN) {
+
+            }
+            else {
+                bool result = l->addChar((wchar_t)wParam);
+
+                if (result == false) {
+                    l->setCurrent(0);
+                    c->incrementLine();
+                    l->addChar((wchar_t)wParam);
+                }
+
+            }
+            InvalidateRect(hwnd, NULL, TRUE);
         }
 
 
@@ -110,7 +128,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         else {
 
-            
+            int totalCols = appSettings.getColumns();
+            int totalLines = appSettings.getLines();
+            Pages* currentPage = Documents->getPage(Documents->getCurrentPage());
+
+            for (int colIdx = 0; colIdx < totalCols; colIdx++) {
+
+                Columns* currentCol = currentPage->getColumn(colIdx);
+
+                int xPos = 20 + (colIdx * ((appSettings.getChars() * 8) + 30));
+
+                for (int lineIdx = 0; lineIdx < totalLines; lineIdx++) {
+                    lines* currentLine = currentCol->getLine(lineIdx);
+
+                    // calculating the yposition 
+
+                    int yPos = 35 + (lineIdx * 16);
+
+                    TextOutW(hdc, xPos, yPos, currentLine->getSentence(), lstrlenW(currentLine->getSentence()));
+                }
+
+            }
 
             HFONT font = CreateFont(18, 0, 0, 0, 500, FALSE, FALSE, FALSE,
                 DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,

@@ -98,6 +98,18 @@ public:
 	int getCurrent() const { return current; }
 	int getMax() const { return max; }
 
+	void setCurrent(int n) { current = n; }
+
+	bool addChar(wchar_t c) {
+		if (current < max - 1) {
+			sentence[current] = c;
+			current++;
+			sentence[current] = L'\0';
+			return true;
+		}
+		return false;
+	}
+
 	void incrementLine() {
 		current++;
 	}
@@ -153,6 +165,8 @@ public:
 	int getNumOfLine() const { return maxLines; }
 	int getCurrentLine() const { return currentLine; }
 
+	lines* getLine(int index) const { return cols[index]; }
+
 	void incrementLine() {
 		currentLine++;
 	}
@@ -207,6 +221,8 @@ public:
 		return maxCol;
 	}
 
+	Columns* getColumn(int index) { return pages[index]; }
+
 	void incrementCol() {
 		currentCol++;
 	}
@@ -252,6 +268,7 @@ public:
 
 	int getCurrentPage() const { return currentPage; }
 	int getMaxPage() const { return maxPage; }
+	Pages* getPage(int index) { return docs[index]; }
 
 	void setMaxPage(int max) { maxPage = max; }
 
