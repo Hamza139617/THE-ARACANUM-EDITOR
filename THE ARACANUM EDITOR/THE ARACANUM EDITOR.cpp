@@ -7,6 +7,8 @@ wchar_t inputBuffer[10] = L"";
 int inputIndex = 0;
 int currentStep = 0;
 
+Document* Documents = nullptr;
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
 
@@ -23,6 +25,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     appSettings.setChar(value);
                     appSettings.setState(true);
                     appSettings.validSettings();
+
+                    Documents = new Document(1, appSettings.getColumns(), appSettings.getLines(), appSettings.getChars());
+
                 }
 
                 currentStep++;
@@ -44,6 +49,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             InvalidateRect(hwnd, NULL, TRUE);
         }
+        else {
+
+        }
+
+
         return 0;
     }
 
@@ -102,15 +112,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             
 
-            HFONT font = CreateFont(40, 0, 0, 0, 600, FALSE, FALSE, FALSE,
+            HFONT font = CreateFont(18, 0, 0, 0, 500, FALSE, FALSE, FALSE,
                 DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                 CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Times New Roman");
             SelectObject(hdc, font);
 
 
             const wchar_t* text = L"THE ARACANUM EDITOR.";
-            DrawText(hdc, text, -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            TextOutW(hdc, 560, 10, text, lstrlenW(text));
 
+            MoveToEx(hdc, 0, 24, NULL);
+            LineTo(hdc, 1439, 24);
+            
 
             DeleteObject(font);
         }
