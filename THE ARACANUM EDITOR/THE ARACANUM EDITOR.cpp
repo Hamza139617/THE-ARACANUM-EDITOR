@@ -106,7 +106,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 if (result == false) {
                     
-                   wchar_t* sentence = wordIntegrity(l);
+                   wchar_t* sentence = wordIntegrity(l);      // function for taking care of the word interity 
                    bool copy;
 
                    if (sentence == nullptr) copy = false;
@@ -154,12 +154,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                         else {
 
-                            Document* copy = new Document(Documents);
-                            copy->setMaxPage(copy->getMaxPage() * 2);
-                            Documents = new Document(copy);
-                            copy->setMaxPage(copy->getMaxPage() / 2);
+                            Document* copy2 = new Document(Documents);
+                            copy2->setMaxPage(copy2->getMaxPage() * 2);
+                            Documents = new Document(copy2);
+                            copy2->setMaxPage(copy2->getMaxPage() / 2);
                             
-                            delete copy;
+                            delete copy2;
 
                             Documents->incrementPage();
                             p = Documents->getPage(Documents->getCurrentPage());
@@ -229,7 +229,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             const wchar_t* question = L"";
 
-            if (currentStep == 0) question = L"Input your number of Columns : ";
+            if (currentStep == 0) question = L"Input your number of Columns : ";   
             else if (currentStep == 1) question = L"Input your number of Lines : ";
             else if (currentStep == 2) question = L"Input your number of Characters: ";
             
@@ -238,8 +238,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             TextOutW(hdc, 970, 150, inputBuffer, lstrlenW(inputBuffer));
 
-            MoveToEx(hdc, 970, 190, NULL);
-            LineTo(hdc, 1140, 190);
+     
 
             const wchar_t* prompt = L"Settings Screen ";
             TextOutW(hdc, 534, 80, prompt, lstrlenW(prompt));
@@ -248,6 +247,74 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         }
         else {
+
+            RECT titleRect = { 0, 0, rect.right, 40 };
+            HBRUSH titleBrush = CreateSolidBrush(RGB(30, 30, 45));
+            FillRect(hdc, &titleRect, titleBrush);
+            DeleteObject(titleBrush);
+
+            HFONT titleFont = CreateFont(22, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+                OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Segoe UI");
+
+
+            SelectObject(hdc, titleFont);
+            SetTextColor(hdc, RGB(255, 255, 255));
+            SetBkMode(hdc, TRANSPARENT);
+
+            const wchar_t* titleText = L"THE ARCANUM EDITOR";
+            TextOutW(hdc, 560, 8, titleText, lstrlenW(titleText));
+
+            DeleteObject(titleFont);
+
+            // for creation of the title thing over the tops 
+
+            RECT ribbonRect = { 0, 40, rect.right, 90 };
+            HBRUSH ribbonBrush = CreateSolidBrush(RGB(240, 240, 240));
+            FillRect(hdc, &ribbonRect, ribbonBrush);
+            DeleteObject(ribbonBrush);
+
+            HFONT btnFont = CreateFont(18, 0, 0, 0, FW_NORMAL, FALSE,
+                FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Segoe UI");
+            SelectObject(hdc, btnFont);
+            SetTextColor(hdc, RGB(0, 0, 0));
+
+            HBRUSH btnBrush = CreateSolidBrush(RGB(210, 210, 210));
+            HBRUSH brdrBrush = (HBRUSH)GetStockObject(BLACK_BRUSH);
+
+            // buttons for alignment
+            RECT btnL = { 20, 50, 50, 80 };
+            FillRect(hdc, &btnL, btnBrush);
+            FrameRect(hdc, &btnL, brdrBrush);
+            TextOutW(hdc, 30, 55, L"L", 1);
+
+
+            RECT btnC = { 60, 50, 90, 80 };
+            FillRect(hdc, &btnC, btnBrush);
+            FrameRect(hdc, &btnC, brdrBrush);
+            TextOutW(hdc, 70, 55, L"C", 1);
+
+            RECT btnR = { 100, 50, 130, 80 };
+            FillRect(hdc, &btnR, btnBrush);
+            FrameRect(hdc, &btnR, brdrBrush);
+            TextOutW(hdc, 110, 55, L"R", 1);
+
+            RECT btnJ = { 140, 50, 170, 80 };
+            FillRect(hdc, &btnJ, btnBrush);
+            FrameRect(hdc, &btnJ, brdrBrush);
+            TextOutW(hdc, 150, 55, L"J", 1);
+
+            DeleteObject(btnBrush);
+            DeleteObject(btnFont);
+
+            SetTextColor(hdc, RGB(0, 0, 0));
+            HFONT textF = CreateFont(18, 0, 0, 0, 500, FALSE, FALSE, FALSE,
+                DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Times New Roman");
+            SelectObject(hdc, textF);
+
+
 
             int totalCols = appSettings.getColumns();
             int totalLines = appSettings.getLines();
@@ -264,27 +331,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                     // calculating the yposition 
 
-                    int yPos = 35 + (lineIdx * 16);
+                    int yPos = 110 + (lineIdx * 20);
 
                     TextOutW(hdc, xPos, yPos, currentLine->getSentence(), lstrlenW(currentLine->getSentence()));
                 }
 
             }
-
-            HFONT font = CreateFont(18, 0, 0, 0, 500, FALSE, FALSE, FALSE,
-                DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Times New Roman");
-            SelectObject(hdc, font);
-
-
-            const wchar_t* text = L"THE ARACANUM EDITOR.";
-            TextOutW(hdc, 560, 10, text, lstrlenW(text));
-
-            MoveToEx(hdc, 0, 24, NULL);
-            LineTo(hdc, 1439, 24);
             
+            DeleteObject(textF);
 
-            DeleteObject(font);
         }
 
         EndPaint(hwnd, &ps);
