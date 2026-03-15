@@ -6,6 +6,7 @@
 wchar_t inputBuffer[10] = L"";
 int inputIndex = 0;
 int currentStep = 0;
+int alignment = 0;
 
 Document* Documents = nullptr;
 
@@ -191,6 +192,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             InvalidateRect(hwnd, NULL, TRUE);
         }
 
+
+        return 0;
+    }
+
+    case WM_RBUTTONDOWN: {
+        int mouseX = LOWORD(lParam);
+        int mouseY = HIWORD(lParam);
+
+        if (mouseY >= 50 && mouseY <= 80) {
+
+            if (mouseX >= 20 && mouseX <= 50) {
+                alignment = 1;
+                // state left 
+            }
+            else if (mouseX >= 60 && mouseX <= 90) {
+                alignment = 2;
+                // state center 
+            }
+            else if (mouseX >= 100 && mouseX <= 130) {
+
+                alignment = 3;
+                // state right 
+            }
+            else if (mouseX >= 140 && mouseX <= 170) {
+                alignment = 4;
+                // state justify 
+            }
+            InvalidateRect(hwnd, NULL, TRUE);
+        }
 
         return 0;
     }
