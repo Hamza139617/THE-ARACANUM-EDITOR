@@ -57,14 +57,134 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             if (wParam == VK_RETURN) {
 
+                bool result = c->incrementLine();
+                if(result)
+                l = c->getLine(c->getCurrentLine());
+                else {
+                    p->incrementColumns();
+                    c = p->getColumn(p->getCurrentColumns());
+                    l = c->getLine(c->getCurrentLine());
+                }
+
             }
-            else {
+            else if (wParam == VK_BACK) {
+                bool result = l->removeChar();
+
+                if (result == false) {
+
+                    bool result2 = c->decrementLine();
+                    if (result2) {
+                        l = c->getLine(c->getCurrentLine());
+                        l->removeChar();
+                    }
+                    else {
+                        p->decrementColumns();
+                        c = p->getColumn(p->getCurrentColumns());
+                        l = c->getLine(c->getCurrentLine());
+
+                    }
+                }
+
+            }
+            else if (wParam == VK_SPACE) {
+
                 bool result = l->addChar((wchar_t)wParam);
 
                 if (result == false) {
-                    l->setCurrent(0);
+
                     c->incrementLine();
+                    l = c->getLine(c->getCurrentLine());
+
                     l->addChar((wchar_t)wParam);
+                }
+
+            }
+            else {
+                bool result = l->addChar((wchar_t)wParam); // for moving to next column when the current column is filled 
+
+                // and also for addition characters 
+
+                if (result == false) {
+                    
+                   wchar_t* sentence = wordIntegrity(l);
+                   bool copy;
+
+                   if (sentence == nullptr) copy = false;
+                   else copy = true;
+
+                    bool result2 = c->incrementLine();
+
+                    if (result2) {
+                        l = c->getLine(c->getCurrentLine());
+
+                        if (copy) {
+                            int k = 0;
+
+                            while (sentence[k] != '\0') {
+                                l->addChar(sentence[k]);
+                                k++;
+                            }
+
+                            
+                        }
+
+                        delete[] sentence; // can we delete a nullptr
+
+                        l->addChar((wchar_t)wParam);
+                    }
+                    else {
+                        bool result3 = p->incrementCol();
+                       
+
+                        if (result3) {
+
+                            c = p->getColumn(p->getCurrentColumns());
+                            l = c->getLine(c->getCurrentLine());
+
+                            if (copy) {
+                                int k = 0;
+
+                                while (sentence[k] != '\0') {
+                                    l->addChar(sentence[k]);
+                                    k++;
+                                }
+
+
+                            }
+                        }
+                        else {
+
+                            Document* copy = new Document(Documents);
+                            copy->setMaxPage(copy->getMaxPage() * 2);
+                            Documents = new Document(copy);
+                            copy->setMaxPage(copy->getMaxPage() / 2);
+                            
+                            delete copy;
+
+                            Documents->incrementPage();
+                            p = Documents->getPage(Documents->getCurrentPage());
+                            c = p->getColumn(p->getCurrentColumns());
+                            l = c->getLine(c->getCurrentLine());
+
+                            if (copy) {
+                                int k = 0;
+
+                                while (sentence[k] != '\0') {
+                                    l->addChar(sentence[k]);
+                                    k++;
+                                }
+
+
+                            }
+
+                            l->addChar((wchar_t)wParam);
+
+                        }
+
+                        delete[] sentence;
+
+                        l->addChar((wchar_t)wParam);
+                    }
                 }
 
             }
@@ -83,6 +203,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         RECT rect;
         GetClientRect(hwnd, &rect);
+
 
 
         HBRUSH bgBrush = CreateSolidBrush(RGB(255, 255, 255));

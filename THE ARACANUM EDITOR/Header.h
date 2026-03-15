@@ -83,13 +83,13 @@ public:
 		sentence[0] = '\0';
 	}
 
-	lines(const lines& other) {
-		max = other.max;
-		current = other.current;
+	lines(const lines* other) {
+		max = other->max;
+		current = other->current;
 		sentence = new wchar_t[max];
 
 		for (int i = 0; i <= current; i++)
-			sentence[i] = other.sentence[i];
+			sentence[i] = other->sentence[i];
 
 
 
@@ -110,11 +110,20 @@ public:
 		return false;
 	}
 
+	bool removeChar() {
+		if (current > 0) {
+			current--;
+			sentence[current] = L'\0';
+			return true;
+		}
+		return false;
+	}
+
 	void incrementLine() {
 		current++;
 	}
 
-	wchar_t* getSentence() const { return sentence; }
+	wchar_t* getSentence() { return sentence; }
 
 	void setMax(int m) { max = m; }
 
@@ -156,6 +165,17 @@ public:
 		
 	}
 
+	Columns(const Columns* c1) {
+		maxLines = c1->getNumOfLine();
+		currentLine = c1->getCurrentLine();
+
+		cols = new lines * [maxLines];
+
+		for (int i = 0; i < maxLines; i++)
+			cols[i] = new lines(c1->getLine(i));
+
+	}
+
 	void setNumOfLine(int n) {
 		maxLines = n;
 		return;
@@ -167,8 +187,21 @@ public:
 
 	lines* getLine(int index) const { return cols[index]; }
 
-	void incrementLine() {
-		currentLine++;
+	bool incrementLine() {
+		if (currentLine < maxLines - 1) {
+			currentLine++;
+			return true;
+		}
+		else return false;
+	}
+
+	bool decrementLine() {
+		if (currentLine > 0) {
+			currentLine--;
+			return true;
+		}
+		return false;
+		
 	}
 
 	~Columns() {
@@ -208,6 +241,19 @@ public:
 			pages[i] = new Columns(numOfLines, maxCharacters);
 	}
 
+	Pages( Pages* p1) {
+
+		currentCol = p1->getCurrentColumns();
+		maxCol = p1->getMaxColumns();
+
+		pages = new Columns * [maxCol];
+
+		for (int i = 0; i < maxCol; i++)
+			pages[i] = new Columns(p1->getColumn(i));
+
+
+	}
+
 	void setMaxColumns(int maxC) {
 		maxCol = maxC;
 		return;
@@ -217,14 +263,33 @@ public:
 		return currentCol;
 	}
 
+	void incrementColumns() {
+		if(currentCol < maxCol - 1 )
+		currentCol++;
+	}
+
+	bool decrementColumns() {
+		if (currentCol > 0) {
+
+			currentCol--;
+			return true;
+		}
+		else
+			return false;
+	}
+
 	int getMaxColumns() const {
 		return maxCol;
 	}
 
 	Columns* getColumn(int index) { return pages[index]; }
 
-	void incrementCol() {
-		currentCol++;
+	bool incrementCol() {
+		if (currentCol < maxCol - 1) {
+			currentCol++;
+			return true;
+		}
+		return false;
 	}
 
 	~Pages() {
@@ -255,8 +320,8 @@ public:
 			docs[i] = new Pages;
 	}
 
-	Document(int maxPage, int maxCols, int maxLines, int maxChars) {
-		currentPage = 0;
+	Document(int maxPage, int maxCols, int maxLines, int maxChars, int currentPage  = 0) {
+		this->currentPage = currentPage;
 		this->maxPage = maxPage;
 
 		docs = new Pages * [maxPage];
@@ -265,6 +330,22 @@ public:
 			docs[i] = new Pages(maxCols, maxLines, maxChars);
 
 	}
+
+	Document( Document* d2) {
+		currentPage = d2->getCurrentPage();
+		maxPage = d2->getMaxPage();
+
+		docs = new Pages * [maxPage];
+
+		for (int i = 0; i < maxPage; i++) {
+			if (i <= currentPage)
+				docs[i] = new Pages(d2->getPage(i));
+			else
+				docs[i] = new Pages(appSettings.getColumns(), appSettings.getLines(), appSettings.getChars());
+		}
+
+	}
+
 
 	int getCurrentPage() const { return currentPage; }
 	int getMaxPage() const { return maxPage; }
@@ -287,3 +368,46 @@ public:
 
 
 };
+
+
+
+
+
+
+
+
+
+
+
+
+// helper functions 
+
+wchar_t* wordIntegrity(lines* lines1 ) {
+
+
+
+	int size = 0;
+
+
+	for (int i = lines1->getCurrent(); lines1->getSentence()[i] != ' ' && i >= 0 ; i--)
+		size++;
+
+	if (size == lines1->getMax()) return nullptr;
+
+	wchar_t* newSentence = new wchar_t[size + 1];
+	int k = 0;
+
+	for (int i = lines1->getCurrent() - size + 1; i < lines1->getCurrent(); i++, k++) {
+		newSentence[k] = lines1->getSentence()[i];
+		
+	}
+
+	
+	for (int i = 0; i < size; i++)
+		lines1->removeChar();
+
+	newSentence[k] = L'\0';
+
+	return newSentence;
+
+}
