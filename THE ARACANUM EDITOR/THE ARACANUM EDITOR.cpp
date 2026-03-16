@@ -62,9 +62,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if(result)
                 l = c->getLine(c->getCurrentLine());
                 else {
-                    p->incrementColumns();
-                    c = p->getColumn(p->getCurrentColumns());
-                    l = c->getLine(c->getCurrentLine());
+                 bool result2 = p->incrementColumns();
+
+                 if (result2) {
+                     c = p->getColumn(p->getCurrentColumns());
+                     l = c->getLine(c->getCurrentLine());
+                 }
+                 else {
+                     Document* copy2 = new Document(Documents);
+                     copy2->setMaxPage(copy2->getMaxPage() * 2);
+                     delete Documents;
+                     Documents = new Document(copy2);
+                     copy2->setMaxPage(copy2->getMaxPage() / 2);
+
+                     delete copy2;
+
+                     Documents->incrementPage();
+                     p = Documents->getPage(Documents->getCurrentPage());
+                     c = p->getColumn(p->getCurrentColumns());
+                     l = c->getLine(c->getCurrentLine());
+
+                 }
+
                 }
 
             }
@@ -79,10 +98,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         l->removeChar();
                     }
                     else {
-                        p->decrementColumns();
-                        c = p->getColumn(p->getCurrentColumns());
-                        l = c->getLine(c->getCurrentLine());
+                       bool result3 = p->decrementColumns();
 
+                       if (result3) {
+                           c = p->getColumn(p->getCurrentColumns());
+                           l = c->getLine(c->getCurrentLine());
+                       }
+                       else {
+
+                           Documents->decrementPage();
+                           p = Documents->getPage(Documents->getCurrentPage());
+                           c = p->getColumn(p->getCurrentColumns());
+                           l = c->getLine(c->getCurrentLine());
+                           l->removeChar();
+
+                       }
                     }
                 }
 
@@ -129,7 +159,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             
                         }
 
-                        delete[] sentence; // can we delete a nullptr
+                        
 
                         l->addChar((wchar_t)wParam);
                     }
@@ -182,10 +212,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                         }
 
-                        delete[] sentence;
+                        
 
                         l->addChar((wchar_t)wParam);
                     }
+
+                    delete[] sentence;
                 }
 
             }
@@ -345,10 +377,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(hdc, textF);
 
 
+            // applying alignment changes only to this part over here 
+
+            
+            
+
 
             int totalCols = appSettings.getColumns();
             int totalLines = appSettings.getLines();
             Pages* currentPage = Documents->getPage(Documents->getCurrentPage());
+
 
             for (int colIdx = 0; colIdx < totalCols; colIdx++) {
 
@@ -359,11 +397,122 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 for (int lineIdx = 0; lineIdx < totalLines; lineIdx++) {
                     lines* currentLine = currentCol->getLine(lineIdx);
 
+                    if (alignment == 2) {
+                        int columnWidth = appSettings.getChars() * 8;
+                        SIZE textSize;
+                        
+                        GetTextExtentPoint32W(hdc, currentLine->getSentence(), currentLine->getCurrent(), &textSize);
+                        int centeredX = 20 + ((colIdx * columnWidth) + (columnWidth - textSize.cx) / 2);
+                        int yPos = 110 + (lineIdx * 20);
+                        TextOutW(hdc, centeredX, yPos, currentLine->getSentence(), currentLine->getCurrent());
+                    }
+                    else if (alignment == 3) {
+                        int columnWidth = appSettings.getChars() * 8;
+                        SIZE textSize;
+
+                        GetTextExtentPoint32W(hdc, currentLine->getSentence(), currentLine->getCurrent(), &textSize);
+                        int centeredX = 20 + ( (colIdx * columnWidth) + (columnWidth - textSize.cx) );
+                        int yPos = 110 + (lineIdx * 20);
+                        TextOutW(hdc, centeredX, yPos, currentLine->getSentence(), currentLine->getCurrent());
+                    }
+                    else if (alignment == 4 && currentLine->integrityMaintained() == true ) {
+
+                        // justicification logic
+                        /*
+                        * If the number of characters is larger than 0 the calculate the text size and number of space 
+                        * then calculate the left over space and divide it among all the spaces 
+                        * create an array for storing the size of characters not the whole sentence 
+                        * create a loop and whenever a space is encountered in the array store the left over space 
+                        * which you divided on the spaces and also the remaining space 
+                        * important update to make it like the ms word the justifying effect is only going to be upplied 
+                        * when the word intgrty phenmna happnd 
+                        */
+
+
+                        int columnWidth = appSettings.getChars() * 8;
+                        int yPos = 110 + (lineIdx * 20);
+                        
+                        if (currentLine->getCurrent() > 0) {
+                            SIZE textSize;
+                            GetTextExtentPoint32W(hdc, currentLine->getSentence(), currentLine->getCurrent(), &textSize);
+
+                            int spaceCount = 0;
+
+                            for (int i = 0; i < currentLine->getCurrent(); i++) {
+                                if (currentLine->getSentence()[i] == L' ') spaceCount++;
+                            }
+
+                            int* dxArray = (int*)GlobalAlloc(GPTR, currentLine->getCurrent() * sizeof(int));
+
+                            if (dxArray) {
+                                for (int i = 0; i < currentLine->getCurrent(); i++) {
+                                    SIZE charSize;
+                                    GetTextExtentPoint32W(hdc, &currentLine->getSentence()[i], 1, &charSize); // try get current 
+                                    dxArray[i] = charSize.cx;
+                                }
+
+                                int total = columnWidth - textSize.cx;
+
+
+                                if (spaceCount > 0 && total > 0) {
+                                    
+                                    int extraSpace = total / spaceCount;
+                                    int remainingPixels = total % spaceCount;
+
+                                    for (int i = 0; i < currentLine->getCurrent(); i++) {
+                                        
+                                        if (currentLine->getSentence()[i] == L' ') {
+
+                                            dxArray[i] += extraSpace;
+
+                                            if (remainingPixels > 0) {
+                                                dxArray[i]++;
+                                                remainingPixels--;
+                                            }
+
+                                        }
+
+                                    }
+
+                                }
+
+                                RECT columnRect = { xPos, yPos, xPos + columnWidth , yPos + 20 }; 
+                                
+
+
+                                ExtTextOutW(hdc, xPos, yPos, ETO_CLIPPED, &columnRect, currentLine->getSentence(), currentLine->getCurrent(), dxArray);
+                                
+                                GlobalFree(dxArray);
+                            }
+
+                        }
+
+                    }
+                    else {
+
+                        int yPos = 110 + (lineIdx * 20);
+                        int columnWidth = appSettings.getChars() * 8;
+                        int* dxArray = (int*)GlobalAlloc(GPTR, currentLine->getCurrent() * sizeof(int));
+
+                        for (int i = 0; i < currentLine->getCurrent(); i++) {
+                            SIZE charSize;
+                            GetTextExtentPoint32W(hdc, &currentLine->getSentence()[i], 1, &charSize); // try get current 
+                            dxArray[i] = charSize.cx;
+                        }
+
+                        RECT columnRect = { xPos, yPos, xPos + columnWidth , yPos + 20 };
+
+                        ExtTextOutW(hdc, xPos, yPos, ETO_CLIPPED, &columnRect, currentLine->getSentence(), currentLine->getCurrent(), dxArray);
+
+                        GlobalFree(dxArray);
+
+                       
+
+
+                    }
+
                     // calculating the yposition 
 
-                    int yPos = 110 + (lineIdx * 20);
-
-                    TextOutW(hdc, xPos, yPos, currentLine->getSentence(), lstrlenW(currentLine->getSentence()));
                 }
 
             }

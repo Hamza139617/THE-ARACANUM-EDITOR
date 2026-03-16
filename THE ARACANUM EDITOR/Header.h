@@ -6,12 +6,14 @@ private:
 	int numOfColumns;
 	int numOfLines;
 	int numOfChar;
+	
 public:
 	CustomSettings() {
 		numOfColumns = 2;
 		numOfLines = 20;
 		numOfChar = 40;
 		screenState = false;
+		
 	}
 
 	CustomSettings(int c, int l, int ch, bool st) {
@@ -36,6 +38,7 @@ public:
 		return;
 	}
 
+	
 	void setState(bool s) {
 		screenState = s;
 		return;
@@ -67,6 +70,7 @@ private:
 	int current;
 	wchar_t* sentence = nullptr;
 	int max;
+	bool integrityDone = false;
 public:
 	lines() {
 		current = 0;
@@ -97,6 +101,10 @@ public:
 
 	int getCurrent() const { return current; }
 	int getMax() const { return max; }
+
+	bool integrityMaintained() const { return integrityDone; }
+	void setIntegrity(bool integrity) { integrityDone = integrity; }
+
 
 	void setCurrent(int n) { current = n; }
 
@@ -263,9 +271,12 @@ public:
 		return currentCol;
 	}
 
-	void incrementColumns() {
-		if(currentCol < maxCol - 1 )
-		currentCol++;
+	bool incrementColumns() {
+		if (currentCol < maxCol - 1) {
+			currentCol++;
+			return true;
+		}
+		return false;
 	}
 
 	bool decrementColumns() {
@@ -351,10 +362,22 @@ public:
 	int getMaxPage() const { return maxPage; }
 	Pages* getPage(int index) { return docs[index]; }
 
+	bool decrementPage() {
+
+		if (currentPage > 0) {
+			currentPage--;
+			return true;
+		}
+		return false;
+
+	}
+
 	void setMaxPage(int max) { maxPage = max; }
 
 	void incrementPage() {
+		
 		currentPage++;
+
 	}
 
 	~Document() {
@@ -388,6 +411,7 @@ wchar_t* wordIntegrity(lines* lines1 ) {
 
 	int size = 0;
 
+	lines1->setIntegrity(true);
 
 	for (int i = lines1->getCurrent(); lines1->getSentence()[i] != ' ' && i >= 0 ; i--)
 		size++;
