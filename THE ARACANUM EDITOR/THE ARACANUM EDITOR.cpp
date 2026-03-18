@@ -4,9 +4,14 @@
 
 // globals 
 wchar_t inputBuffer[10] = L"";
+wchar_t searchBuffer[10] = L"";
+wchar_t compareBuffer[10] = L"";
 int inputIndex = 0;
+int searchIndex = 0;
 int currentStep = 0;
 int alignment = 0;
+bool searching = false;
+
 
 Document* Documents = nullptr;
 
@@ -18,7 +23,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         if (appSettings.getState() == false) {
             
             if (wParam == VK_RETURN) {
-                int value = _wtoi(inputBuffer);
+                int value = toInteger(inputBuffer);
 
                 if (currentStep == 0) appSettings.setColumns(value);
                 else if (currentStep == 1) appSettings.setLines(value);
@@ -55,6 +60,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             Pages* p = Documents->getPage(Documents->getCurrentPage());
             Columns* c = p->getColumn(p->getCurrentColumns());
             lines* l = c->getLine(c->getCurrentLine());
+
+            if (searching == true) {
+
+                
+
+                if (wParam == VK_RETURN) {
+                   
+                    for (int i = 0; i < searchIndex; i++) {
+                        compareBuffer[i] = searchBuffer[i];
+                        searchBuffer[i] = L' ';
+                    }
+
+                    compareBuffer[searchIndex] = L'\0';
+
+                    searching = false;
+                    searchIndex = 0;
+
+                }
+                else if (wParam == VK_BACK) {
+                    if (searchIndex > 0) {
+                        searchIndex--;
+                        searchBuffer[searchIndex] = L'\0';
+                    }
+                }
+                else if ((wParam >= L'0' && wParam <= L'9') || (wParam >= L'A' && wParam <= L'Z') || (wParam >= L'a' && wParam <= L'z')) {
+                    if (searchIndex < 9) {
+                        searchBuffer[searchIndex++] = (wchar_t)wParam;
+                        searchBuffer[searchIndex] = L'\0';
+                    }
+                }
+
+                InvalidateRect(hwnd, NULL, TRUE);
+
+
+            }
+
 
             if (wParam == VK_RETURN) {
 
@@ -253,6 +294,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             InvalidateRect(hwnd, NULL, TRUE);
         }
+        if ((mouseY >= 45 && mouseY <= 85) && (mouseX >= 1100 && mouseX<= 1350 ) ) {
+
+            searching = true;
+
+            InvalidateRect(hwnd, NULL, TRUE);
+        }
+
 
         return 0;
     }
@@ -340,31 +388,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                 CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Segoe UI");
             SelectObject(hdc, btnFont);
-            SetTextColor(hdc, RGB(0, 0, 0));
+            SetTextColor(hdc, RGB(255, 255, 255));
 
-            HBRUSH btnBrush = CreateSolidBrush(RGB(210, 210, 210));
-            HBRUSH brdrBrush = (HBRUSH)GetStockObject(BLACK_BRUSH);
+            HBRUSH btnBrush = CreateSolidBrush(RGB(128, 128, 128));
+            
 
             // buttons for alignment
             RECT btnL = { 20, 50, 50, 80 };
             FillRect(hdc, &btnL, btnBrush);
-            FrameRect(hdc, &btnL, brdrBrush);
             TextOutW(hdc, 30, 55, L"L", 1);
+
+            RECT Searchbar = { 1100, 45, 1350, 85 };
+            FillRect(hdc, &Searchbar, btnBrush);
+            TextOutW(hdc, 1110, 55, L"Search", 6);
 
 
             RECT btnC = { 60, 50, 90, 80 };
             FillRect(hdc, &btnC, btnBrush);
-            FrameRect(hdc, &btnC, brdrBrush);
             TextOutW(hdc, 70, 55, L"C", 1);
 
             RECT btnR = { 100, 50, 130, 80 };
             FillRect(hdc, &btnR, btnBrush);
-            FrameRect(hdc, &btnR, brdrBrush);
             TextOutW(hdc, 110, 55, L"R", 1);
 
             RECT btnJ = { 140, 50, 170, 80 };
             FillRect(hdc, &btnJ, btnBrush);
-            FrameRect(hdc, &btnJ, brdrBrush);
             TextOutW(hdc, 150, 55, L"J", 1);
 
             DeleteObject(btnBrush);
@@ -376,11 +424,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Times New Roman");
             SelectObject(hdc, textF);
 
+            // search bar
+
+
+            if (searching == true) {
+
+                HFONT font = CreateFont(18, 0, 0, 0, FW_NORMAL, FALSE,
+                    FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                    CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Segoe UI");
+                SelectObject(hdc, font);
+                SetTextColor(hdc, RGB(255, 255, 255));
+
+
+                
+                TextOutW(hdc, 1170, 55, searchBuffer, lstrlenW(searchBuffer));
+
+
+                DeleteObject(font);
+            }
+
+
+
 
             // applying alignment changes only to this part over here 
 
             
             
+
 
 
             int totalCols = appSettings.getColumns();
@@ -517,7 +587,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             }
             
+            
+            
+            
+            
+            
             DeleteObject(textF);
+
 
         }
 

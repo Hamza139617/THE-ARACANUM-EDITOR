@@ -435,3 +435,26 @@ wchar_t* wordIntegrity(lines* lines1 ) {
 	return newSentence;
 
 }
+
+
+int toInteger(const wchar_t* str) {
+	int result = 0;
+	int i = 0;
+
+	bool isNegative = false;
+
+	if (str[0] == L'-') {
+		isNegative = true;
+		i = 1;
+	}
+
+	while (str[i] != L'\0') {
+		if (str[i] >= L'0' && str[i] <= L'9') {
+			result = (result * 10) + (str[i] - L'0');
+		}
+		i++;
+	}
+
+	return isNegative ? -result : result;
+
+}
