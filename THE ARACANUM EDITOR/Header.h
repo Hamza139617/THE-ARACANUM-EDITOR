@@ -118,6 +118,8 @@ public:
 		return false;
 	}
 
+	int** compareSentence(wchar_t* searchBuffer, lines* sentence);
+
 	bool removeChar() {
 		if (current > 0) {
 			current--;
@@ -458,3 +460,96 @@ int toInteger(const wchar_t* str) {
 	return isNegative ? -result : result;
 
 }
+
+
+bool compareString(const wchar_t* string1, wchar_t* string2) {
+	int i = 0;
+
+	if (string1 == nullptr || string2 == nullptr) return false;
+
+	while (string1[i] != '\0' && string2[i] != '\0') {
+
+		if (string1[i] != string2[i]) return false;
+
+		i++;
+
+	}
+
+	return (string1[i] == '\0' && string2[i] == '\0');
+
+}
+
+
+int** lines::compareSentence(wchar_t* searchBuffer, lines* sentence ) {
+	// first count occurences 
+
+	wchar_t copy[100];
+
+	int count = 0;
+	int copyCount = 0;
+	for (int i = 0; i < sentence->getCurrent(); i++) {
+		
+		if (sentence->getSentence()[i] != ' ') {
+			if(copyCount < (int)(sizeof(copy)/sizeof(wchar_t) - 1 ))
+			copy[copyCount++] = sentence->sentence[i];
+		}
+		else {
+			copy[copyCount] = L'\0';
+			bool result = compareString(copy, searchBuffer );
+
+			if (result) {
+				count++;
+			}
+			copyCount = 0;
+
+		}
+
+	}
+
+	if (copyCount > 0) {
+		copy[copyCount] = L'\0';
+		if (compareString(copy, searchBuffer)) count++;
+		copyCount = 0;
+	}
+
+	int** positions = new int* [count + 1];
+
+	for (int i = 0; i <= count; i++)
+		positions[i] = new int[2];
+
+	positions[count][0] = -1;
+	positions[count][1] = -1;
+
+	
+	copyCount = 0;
+	int starting = 0;
+	int ending = 0;
+	int positionCount = 0;
+
+	for (int i = 0; i <= sentence->getCurrent(); i++) {
+
+		if (sentence->getSentence()[i] != ' ' && sentence->getSentence()[i] != '\0' ) {
+
+			if (copyCount == 0) starting = i;
+
+			copy[copyCount++] = sentence->getSentence()[i];
+		}
+		else {
+			copy[copyCount] = L'\0';
+			ending = copyCount;
+			bool result = compareString(copy, searchBuffer);
+
+			if (result) {
+				positions[positionCount][0] = starting;
+				positions[positionCount++][1] = ending;
+			}
+			copyCount = 0;
+
+		}
+
+	}
+
+	return positions;
+
+}
+

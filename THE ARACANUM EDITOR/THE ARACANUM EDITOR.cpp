@@ -6,6 +6,7 @@
 wchar_t inputBuffer[10] = L"";
 wchar_t searchBuffer[10] = L"";
 wchar_t compareBuffer[10] = L"";
+bool hasSearch = false;
 int inputIndex = 0;
 int searchIndex = 0;
 int currentStep = 0;
@@ -75,6 +76,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     compareBuffer[searchIndex] = L'\0';
 
                     searching = false;
+                    hasSearch = true;
                     searchIndex = 0;
 
                 }
@@ -470,21 +472,135 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (alignment == 2) {
                         int columnWidth = appSettings.getChars() * 8;
                         SIZE textSize;
-                        
-                        GetTextExtentPoint32W(hdc, currentLine->getSentence(), currentLine->getCurrent(), &textSize);
-                        int centeredX = 20 + ((colIdx * columnWidth) + (columnWidth - textSize.cx) / 2);
                         int yPos = 110 + (lineIdx * 20);
-                        TextOutW(hdc, centeredX, yPos, currentLine->getSentence(), currentLine->getCurrent());
-                    }
-                    else if (alignment == 3) {
-                        int columnWidth = appSettings.getChars() * 8;
-                        SIZE textSize;
+
+                        int centeredX = 0;
+
+
+                        if (hasSearch == true ) {
+                            int** position = currentLine->compareSentence(compareBuffer, currentLine);
+                            /* GetTextExtentPoint32W(hdc, currentLine->getSentence(), currentLine->getCurrent(), &textSize);*/
+
+                            SIZE totalTextSize;
+                            GetTextExtentPoint32W(hdc, currentLine->getSentence(), currentLine->getCurrent(), &totalTextSize);
+
+                            int startX = 20 + (colIdx * columnWidth) + (columnWidth - totalTextSize.cx) / 2;
+                            int currentX = startX;
+                            int lastProcessedChar = 0;
+                           /*we are going to loop this */
+                             // calculate ocurences pass the sentence and where the first start pass that instead of getCurrent and fill that with text size and when 
+                             // those which needs to be highlighted comes pass that as well and this time print that with the highlight 
+                             // add the number with the resullt of currentLine->getSentence() but then how are we going to deal with the position 
+                             // is there any of solving the problem of handling of the position the rest has been sol
+
+                            for (int i = 0; position[i][0] != -1; i++) {
+                                
+
+                                if(position[i][0] > lastProcessedChar ) {
+                                    int partLen = position[i][0] - lastProcessedChar;
+                                    TextOutW(hdc, currentX, yPos, currentLine->getSentence() + lastProcessedChar, partLen);
+
+                                    SIZE partSize;
+                                    GetTextExtentPoint32W(hdc, currentLine->getSentence() + lastProcessedChar, partLen, &partSize);
+                                    currentX += partSize.cx;
+                                }
+
+                                SetBkMode(hdc, OPAQUE);
+                                SetBkColor(hdc, RGB(255, 255, 0));
+                                
+                                TextOutW(hdc, currentX, yPos, currentLine->getSentence() + position[i][0], position[i][1]);
+
+                                SIZE matchSize;
+                                GetTextExtentPoint32W(hdc, currentLine->getSentence() + position[i][0], position[i][1], &matchSize);
+                                currentX += matchSize.cx;
+
+                                SetBkMode(hdc, TRANSPARENT);
+                                lastProcessedChar = position[i][0] + position[i][1];
+                                
+
+                            }
+
+                            if (lastProcessedChar <= currentLine->getCurrent()) {
+                                TextOutW(hdc, currentX, yPos, currentLine->getSentence() + lastProcessedChar, currentLine->getCurrent() - lastProcessedChar);
+                            }
+
+                            int i;
+                            for ( i = 0; position[i][0] != -1; i++)
+                                delete[] position[i];
+
+                            delete[] position[i];
+
+                            delete[] position;
+
+                        }
 
                         GetTextExtentPoint32W(hdc, currentLine->getSentence(), currentLine->getCurrent(), &textSize);
-                        int centeredX = 20 + ( (colIdx * columnWidth) + (columnWidth - textSize.cx) );
-                        int yPos = 110 + (lineIdx * 20);
+                        centeredX = 20 + ((colIdx * columnWidth) + (columnWidth - textSize.cx) / 2);
                         TextOutW(hdc, centeredX, yPos, currentLine->getSentence(), currentLine->getCurrent());
+                        
                     }
+                    else if (alignment == 3) {
+
+                        int columnWidth = appSettings.getChars() * 8;
+                        SIZE textSize;
+                        int yPos = 110 + (lineIdx * 20);
+
+                        int centeredX = 0;
+
+                        if (hasSearch == true) {
+
+                            int** position = currentLine->compareSentence(compareBuffer, currentLine);
+
+                            SIZE totalTextSize;
+                            GetTextExtentPoint32W(hdc, currentLine->getSentence(), currentLine->getCurrent(), &totalTextSize);
+
+                            int startX = 20 + (colIdx * columnWidth) + (columnWidth - totalTextSize.cx);
+                            int currentX = startX;
+                            int lastProcessedChar = 0;
+
+
+                            for (int i = 0; position[i][0] != -1; i++) {
+
+
+                                if (position[i][0] > lastProcessedChar) {
+                                    int partLen = position[i][0] - lastProcessedChar;
+                                    TextOutW(hdc, currentX, yPos, currentLine->getSentence() + lastProcessedChar, partLen);
+
+                                    SIZE partSize;
+                                    GetTextExtentPoint32W(hdc, currentLine->getSentence() + lastProcessedChar, partLen, &partSize);
+                                    currentX += partSize.cx;
+                                }
+
+                                SetBkMode(hdc, OPAQUE);
+                                SetBkColor(hdc, RGB(255, 255, 0));
+
+                                TextOutW(hdc, currentX, yPos, currentLine->getSentence() + position[i][0], position[i][1]);
+
+                                SIZE matchSize;
+                                GetTextExtentPoint32W(hdc, currentLine->getSentence() + position[i][0], position[i][1], &matchSize);
+                                currentX += matchSize.cx;
+
+                                SetBkMode(hdc, TRANSPARENT);
+                                lastProcessedChar = position[i][0] + position[i][1];
+
+
+                            }
+
+                            if (lastProcessedChar <= currentLine->getCurrent()) {
+                                TextOutW(hdc, currentX, yPos, currentLine->getSentence() + lastProcessedChar, currentLine->getCurrent() - lastProcessedChar);
+                            }
+
+
+
+                        }
+
+                        
+
+                        GetTextExtentPoint32W(hdc, currentLine->getSentence(), currentLine->getCurrent(), &textSize);
+                         centeredX = 20 + ( (colIdx * columnWidth) + (columnWidth - textSize.cx) );
+                        TextOutW(hdc, centeredX, yPos, currentLine->getSentence(), currentLine->getCurrent());
+                        
+}
                     else if (alignment == 4 && currentLine->integrityMaintained() == true ) {
 
                         // justicification logic
@@ -497,6 +613,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         * important update to make it like the ms word the justifying effect is only going to be upplied 
                         * when the word intgrty phenmna happnd 
                         */
+
 
 
                         int columnWidth = appSettings.getChars() * 8;
@@ -573,6 +690,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         RECT columnRect = { xPos, yPos, xPos + columnWidth , yPos + 20 };
 
                         ExtTextOutW(hdc, xPos, yPos, ETO_CLIPPED, &columnRect, currentLine->getSentence(), currentLine->getCurrent(), dxArray);
+
 
                         GlobalFree(dxArray);
 
